@@ -1,0 +1,655 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>骰子概率计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        dark: '#1F2937',
+                        light: '#F9FAFB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            .transition-custom {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 页面标题 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-dark mb-2 text-shadow">骰子概率计算器</h1>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">计算不同姿态下投掷骰子的概率，帮助你在策略游戏中做出最佳决策</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧控制面板 -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- 姿态选择卡片 -->
+                <div class="bg-white rounded-xl p-6 card-shadow transition-custom hover:shadow-lg">
+                    <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                        <i class="fa fa-shield mr-2 text-primary"></i>姿态选择
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="form-group flex items-start">
+                            <div class="mr-4 mt-1">
+                                <!-- 攻击姿态图片预留位置 -->
+                                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <i class="fa fa-bolt text-primary text-xl"></i>
+                                    <!-- 可替换为实际图片
+                                    <img src="attack-icon.png" alt="攻击姿态图标" class="w-full h-full object-cover rounded-full">
+                                    -->
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="attack-stance" class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary" checked>
+                                    <span class="font-medium text-gray-700">攻击姿态</span>
+                                </label>
+                                <p class="text-sm text-gray-500 ml-7 mt-1">所有的空心轻击视为轻击、空心重击视为重击</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group flex items-start">
+                            <div class="mr-4 mt-1">
+                                <!-- 防御姿态图片预留位置 -->
+                                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <i class="fa fa-shield text-primary text-xl"></i>
+                                    <!-- 可替换为实际图片
+                                    <img src="defense-icon.png" alt="防御姿态图标" class="w-full h-full object-cover rounded-full">
+                                    -->
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="defense-stance" class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                                    <span class="font-medium text-gray-700">防御姿态</span>
+                                </label>
+                                <p class="text-sm text-gray-500 ml-7 mt-1">所有的空心防御x2视为防御x2</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group flex items-start">
+                            <div class="mr-4 mt-1">
+                                <!-- 机动姿态图片预留位置 -->
+                                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <i class="fa fa-running text-primary text-xl"></i>
+                                    <!-- 可替换为实际图片
+                                    <img src="mobile-icon.png" alt="机动姿态图标" class="w-full h-full object-cover rounded-full">
+                                    -->
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="mobile-stance" class="form-checkbox h-5 w-5 text-primary rounded border-gray-300 focus:ring-primary">
+                                    <span class="font-medium text-gray-700">机动姿态</span>
+                                </label>
+                                <p class="text-sm text-gray-500 ml-7 mt-1">只有此姿态下才有回避骰子</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 骰子数量选择卡片 -->
+                <div class="bg-white rounded-xl p-6 card-shadow transition-custom hover:shadow-lg">
+                    <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                        <i class="fa fa-cubes mr-2 text-primary"></i>骰子数量
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="form-group">
+                            <label for="light-attack" class="block text-gray-700 font-medium mb-2">轻击骰子</label>
+                            <div class="flex items-center">
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-l transition-custom" id="decrease-light">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <input type="number" id="light-attack" min="0" max="10" value="2" class="w-full py-2 px-4 border-t border-b text-center focus:outline-none focus:ring-2 focus:ring-primary/50" disabled>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-r transition-custom" id="increase-light">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="heavy-attack" class="block text-gray-700 font-medium mb-2">重击骰子</label>
+                            <div class="flex items-center">
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-l transition-custom" id="decrease-heavy">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <input type="number" id="heavy-attack" min="0" max="10" value="2" class="w-full py-2 px-4 border-t border-b text-center focus:outline-none focus:ring-2 focus:ring-primary/50" disabled>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-r transition-custom" id="increase-heavy">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="defense-dice" class="block text-gray-700 font-medium mb-2">防御骰子</label>
+                            <div class="flex items-center">
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-l transition-custom" id="decrease-defense">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <input type="number" id="defense-dice" min="0" max="10" value="2" class="w-full py-2 px-4 border-t border-b text-center focus:outline-none focus:ring-2 focus:ring-primary/50" disabled>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-r transition-custom" id="increase-defense">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="evade-dice" class="block text-gray-700 font-medium mb-2">回避骰子</label>
+                            <div class="flex items-center">
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-l transition-custom" id="decrease-evade" disabled>
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <input type="number" id="evade-dice" min="0" max="10" value="0" class="w-full py-2 px-4 border-t border-b text-center focus:outline-none focus:ring-2 focus:ring-primary/50" disabled>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-r transition-custom" id="increase-evade" disabled>
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计算按钮 -->
+                <button id="calculate-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-xl transition-custom transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                    <i class="fa fa-calculator text-xl"></i>
+                    <span>计算概率</span>
+                </button>
+            </div>
+
+            <!-- 右侧结果展示面板 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 结果统计卡片 -->
+                <div class="bg-white rounded-xl p-6 card-shadow transition-custom hover:shadow-lg">
+                    <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                        <i class="fa fa-bar-chart mr-2 text-primary"></i>概率统计
+                    </h2>
+                    <div id="results-container" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-primary">
+                                <h3 class="font-bold text-primary mb-2">穿透成功概率</h3>
+                                <div class="flex items-end">
+                                    <span id="success-rate" class="text-4xl font-bold text-primary">0%</span>
+                                    <span class="ml-2 text-gray-500 mb-1">可能性</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-red-50 rounded-lg p-4 border-l-4 border-danger">
+                                <h3 class="font-bold text-danger mb-2">穿透失败概率</h3>
+                                <div class="flex items-end">
+                                    <span id="fail-rate" class="text-4xl font-bold text-danger">0%</span>
+                                    <span class="ml-2 text-gray-500 mb-1">可能性</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 概率图表 -->
+                        <div class="mb-6">
+                            <h3 class="font-bold text-gray-700 mb-3">穿透概率分布</h3>
+                            <div id="probability-chart" class="w-full h-64 bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center justify-center h-full text-gray-400">
+                                    <i class="fa fa-spinner fa-spin mr-2"></i>
+                                    <span>正在生成图表...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="initial-message" class="text-center py-12 text-gray-500">
+                        <i class="fa fa-dice text-4xl mb-4 text-gray-300"></i>
+                        <p class="text-lg">请选择姿态和骰子数量，然后点击"计算概率"按钮</p>
+                    </div>
+                    
+                    <div id="loading-indicator" class="hidden text-center py-12 text-gray-500">
+                        <i class="fa fa-spinner fa-spin text-4xl mb-4 text-primary"></i>
+                        <p class="text-lg">正在计算概率，请稍候...</p>
+                    </div>
+                </div>
+                
+                <!-- 骰子详情卡片 -->
+                <div class="bg-white rounded-xl p-6 card-shadow transition-custom hover:shadow-lg">
+                    <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+                        <i class="fa fa-info-circle mr-2 text-primary"></i>骰子详情
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 轻击骰子 -->
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h3 class="font-bold text-gray-700 mb-2 flex items-center">
+                                <span class="inline-block w-4 h-4 bg-warning rounded mr-2"></span>轻击骰子
+                            </h3>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• 轻击x2 × 2</li>
+                                <li>• 轻击 × 2</li>
+                                <li>• 空心轻击 × 1</li>
+                                <li>• 闪电 × 1</li>
+                                <li>• 眼睛 × 1</li>
+                                <li>• 空白 × 1</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 重击骰子 -->
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h3 class="font-bold text-gray-700 mb-2 flex items-center">
+                                <span class="inline-block w-4 h-4 bg-danger rounded mr-2"></span>重击骰子
+                            </h3>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• 重击 × 4</li>
+                                <li>• 空心重击 × 1</li>
+                                <li>• 空心轻击 × 1</li>
+                                <li>• 闪电 × 1</li>
+                                <li>• 眼睛 × 1</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 防御骰子 -->
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h3 class="font-bold text-gray-700 mb-2 flex items-center">
+                                <span class="inline-block w-4 h-4 bg-white border border-gray-300 rounded mr-2"></span>防御骰子
+                            </h3>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• 防御 × 1</li>
+                                <li>• 空心防御x2 × 2</li>
+                                <li>• 闪避 × 1</li>
+                                <li>• 闪电 × 2</li>
+                                <li>• 眼睛 × 1</li>
+                                <li>• 空白 × 1</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 回避骰子 -->
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h3 class="font-bold text-gray-700 mb-2 flex items-center">
+                                <span class="inline-block w-4 h-4 bg-primary rounded mr-2"></span>回避骰子
+                            </h3>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• 闪避 × 2</li>
+                                <li>• 眼睛 × 2</li>
+                                <li>• 闪电 × 1</li>
+                                <li>• 空白 × 3</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 页脚 -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>骰子概率计算器 © 2025 | 设计与开发</p>
+        </footer>
+    </div>
+
+    <script>
+        // 姿态控制
+        const attackStance = document.getElementById('attack-stance');
+        const defenseStance = document.getElementById('defense-stance');
+        const mobileStance = document.getElementById('mobile-stance');
+        
+        // 骰子数量控制
+        const lightAttack = document.getElementById('light-attack');
+        const heavyAttack = document.getElementById('heavy-attack');
+        const defenseDice = document.getElementById('defense-dice');
+        const evadeDice = document.getElementById('evade-dice');
+        
+        // 加减按钮
+        const decreaseLight = document.getElementById('decrease-light');
+        const increaseLight = document.getElementById('increase-light');
+        const decreaseHeavy = document.getElementById('decrease-heavy');
+        const increaseHeavy = document.getElementById('increase-heavy');
+        const decreaseDefense = document.getElementById('decrease-defense');
+        const increaseDefense = document.getElementById('increase-defense');
+        const decreaseEvade = document.getElementById('decrease-evade');
+        const increaseEvade = document.getElementById('increase-evade');
+        
+        // 计算按钮和结果区域
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultsContainer = document.getElementById('results-container');
+        const initialMessage = document.getElementById('initial-message');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const successRate = document.getElementById('success-rate');
+        const failRate = document.getElementById('fail-rate');
+        const probabilityChart = document.getElementById('probability-chart');
+        
+        // 姿态互斥逻辑
+        defenseStance.addEventListener('change', function() {
+            if (this.checked) {
+                mobileStance.checked = false;
+                updateEvadeDiceControls();
+            }
+        });
+        
+        mobileStance.addEventListener('change', function() {
+            if (this.checked) {
+                defenseStance.checked = false;
+                updateEvadeDiceControls();
+            } else {
+                evadeDice.value = 0;
+                updateEvadeDiceControls();
+            }
+        });
+        
+        // 更新回避骰子控件状态
+        function updateEvadeDiceControls() {
+            if (mobileStance.checked) {
+                evadeDice.disabled = false;
+                decreaseEvade.disabled = false;
+                increaseEvade.disabled = false;
+            } else {
+                evadeDice.disabled = true;
+                decreaseEvade.disabled = true;
+                increaseEvade.disabled = true;
+                evadeDice.value = 0;
+            }
+        }
+        
+        // 骰子数量控制逻辑
+        decreaseLight.addEventListener('click', () => {
+            if (parseInt(lightAttack.value) > 0) {
+                lightAttack.value = parseInt(lightAttack.value) - 1;
+            }
+        });
+        
+        increaseLight.addEventListener('click', () => {
+            if (parseInt(lightAttack.value) < 10) {
+                lightAttack.value = parseInt(lightAttack.value) + 1;
+            }
+        });
+        
+        decreaseHeavy.addEventListener('click', () => {
+            if (parseInt(heavyAttack.value) > 0) {
+                heavyAttack.value = parseInt(heavyAttack.value) - 1;
+            }
+        });
+        
+        increaseHeavy.addEventListener('click', () => {
+            if (parseInt(heavyAttack.value) < 10) {
+                heavyAttack.value = parseInt(heavyAttack.value) + 1;
+            }
+        });
+        
+        decreaseDefense.addEventListener('click', () => {
+            if (parseInt(defenseDice.value) > 0) {
+                defenseDice.value = parseInt(defenseDice.value) - 1;
+            }
+        });
+        
+        increaseDefense.addEventListener('click', () => {
+            if (parseInt(defenseDice.value) < 10) {
+                defenseDice.value = parseInt(defenseDice.value) + 1;
+            }
+        });
+        
+        decreaseEvade.addEventListener('click', () => {
+            if (parseInt(evadeDice.value) > 0) {
+                evadeDice.value = parseInt(evadeDice.value) - 1;
+            }
+        });
+        
+        increaseEvade.addEventListener('click', () => {
+            if (parseInt(evadeDice.value) < 10) {
+                evadeDice.value = parseInt(evadeDice.value) + 1;
+            }
+        });
+        
+        // 计算按钮点击事件
+        calculateBtn.addEventListener('click', function() {
+            // 显示加载状态
+            initialMessage.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            
+            // 模拟计算延迟，实际应用中可以移除
+            setTimeout(() => {
+                calculateProbabilities();
+            }, 800);
+        });
+        
+        // 计算概率函数
+        function calculateProbabilities() {
+            // 获取当前姿态和骰子数量
+            const isAttackStance = attackStance.checked;
+            const isDefenseStance = defenseStance.checked;
+            const isMobileStance = mobileStance.checked;
+            
+            const lightCount = parseInt(lightAttack.value);
+            const heavyCount = parseInt(heavyAttack.value);
+            const defenseCount = parseInt(defenseDice.value);
+            const evadeCount = parseInt(evadeDice.value);
+            
+            // 骰子面定义
+            const lightDiceFaces = [
+                { type: 'light', value: 2 }, // 轻击x2
+                { type: 'light', value: 2 }, // 轻击x2
+                { type: 'light', value: 1 }, // 轻击
+                { type: 'light', value: 1 }, // 轻击
+                { type: 'hollow-light', value: 1 }, // 空心轻击
+                { type: 'special', value: 'lightning' }, // 闪电
+                { type: 'special', value: 'eye' }, // 眼睛
+                { type: 'special', value: 'blank' } // 空白
+            ];
+            
+            const heavyDiceFaces = [
+                { type: 'heavy', value: 1 }, // 重击
+                { type: 'heavy', value: 1 }, // 重击
+                { type: 'heavy', value: 1 }, // 重击
+                { type: 'heavy', value: 1 }, // 重击
+                { type: 'hollow-heavy', value: 1 }, // 空心重击
+                { type: 'hollow-light', value: 1 }, // 空心轻击
+                { type: 'special', value: 'lightning' }, // 闪电
+                { type: 'special', value: 'eye' } // 眼睛
+            ];
+            
+            const defenseDiceFaces = [
+                { type: 'defense', value: 1 }, // 防御
+                { type: 'hollow-defense2', value: 1 }, // 空心防御x2
+                { type: 'hollow-defense2', value: 1 }, // 空心防御x2
+                { type: 'evade', value: 1 }, // 闪避
+                { type: 'special', value: 'lightning' }, // 闪电
+                { type: 'special', value: 'lightning-eye' }, // 闪电眼睛
+                { type: 'special', value: 'blank' } // 空白
+            ];
+            
+            const evadeDiceFaces = [
+                { type: 'evade', value: 1 }, // 闪避
+                { type: 'evade', value: 1 }, // 闪避
+                { type: 'special', value: 'eye' }, // 眼睛
+                { type: 'special', value: 'eye' }, // 眼睛
+                { type: 'special', value: 'lightning' }, // 闪电
+                { type: 'special', value: 'blank' }, // 空白
+                { type: 'special', value: 'blank' }, // 空白
+                { type: 'special', value: 'blank' } // 空白
+            ];
+            
+            // 计算所有可能的骰子组合
+            // 为了简化计算，这里使用蒙特卡洛模拟方法而不是穷举所有组合
+            const totalSimulations = 10000;
+            let successCount = 0;
+            
+            // 用于存储不同穿透值的频率
+            const penetrationFrequency = {};
+            
+            for (let sim = 0; sim < totalSimulations; sim++) {
+                // 初始化结果统计
+                let qDamage = 0; // Q类伤害
+                let hDamage = 0; // H类伤害
+                let defense = 0; // 防御值
+                let evade = 0; // 闪避值
+                
+                // 模拟投掷轻击骰子
+                for (let i = 0; i < lightCount; i++) {
+                    const face = lightDiceFaces[Math.floor(Math.random() * lightDiceFaces.length)];
+                    
+                    if (face.type === 'light') {
+                        qDamage += face.value;
+                    } else if (face.type === 'hollow-light') {
+                        if (isAttackStance) {
+                            qDamage += face.value; // 攻击姿态下，空心轻击视为轻击
+                        }
+                    }
+                }
+                
+                // 模拟投掷重击骰子
+                for (let i = 0; i < heavyCount; i++) {
+                    const face = heavyDiceFaces[Math.floor(Math.random() * heavyDiceFaces.length)];
+                    
+                    if (face.type === 'heavy') {
+                        hDamage += face.value;
+                    } else if (face.type === 'hollow-heavy') {
+                        if (isAttackStance) {
+                            hDamage += face.value; // 攻击姿态下，空心重击视为重击
+                        }
+                    } else if (face.type === 'hollow-light') {
+                        if (isAttackStance) {
+                            qDamage += face.value; // 攻击姿态下，空心轻击视为轻击
+                        }
+                    }
+                }
+                
+                // 模拟投掷防御骰子
+                for (let i = 0; i < defenseCount; i++) {
+                    const face = defenseDiceFaces[Math.floor(Math.random() * defenseDiceFaces.length)];
+                    
+                    if (face.type === 'defense') {
+                        defense += face.value;
+                    } else if (face.type === 'hollow-defense2') {
+                        if (isDefenseStance) {
+                            defense += 2; // 防御姿态下，空心防御x2视为防御x2
+                        } else {
+                            defense += 1; // 非防御姿态下，空心防御x2视为普通防御
+                        }
+                    } else if (face.type === 'evade') {
+                        evade += face.value;
+                    }
+                }
+                
+                // 模拟投掷回避骰子（只有在机动姿态下）
+                for (let i = 0; i < evadeCount; i++) {
+                    const face = evadeDiceFaces[Math.floor(Math.random() * evadeDiceFaces.length)];
+                    
+                    if (face.type === 'evade') {
+                        evade += face.value;
+                    }
+                }
+                
+                // 计算穿透结果
+                let penetration = 0;
+                if (hDamage > evade) {
+                    penetration = 1; // 穿透成功（H类伤害 > 闪避值）
+                } else if ((qDamage + hDamage) > (defense + evade)) {
+                    penetration = 1; // 穿透成功（总伤害 > 总防御+闪避）
+                } else {
+                    penetration = 0; // 穿透失败
+                }
+                
+                // 更新统计
+                if (penetration === 1) {
+                    successCount++;
+                }
+                
+                // 更新穿透频率统计
+                if (!penetrationFrequency[penetration]) {
+                    penetrationFrequency[penetration] = 0;
+                }
+                penetrationFrequency[penetration]++;
+            }
+            
+            // 计算成功率和失败率
+            const successPercentage = Math.round((successCount / totalSimulations) * 100);
+            const failPercentage = 100 - successPercentage;
+            
+            // 更新UI显示
+            successRate.textContent = `${successPercentage}%`;
+            failRate.textContent = `${failPercentage}%`;
+            
+            // 生成图表
+            generateChart(penetrationFrequency, successPercentage, failPercentage);
+            
+            // 显示结果，隐藏加载状态
+            loadingIndicator.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+        }
+        
+        // 生成图表函数
+        function generateChart(frequencyData, successRate, failRate) {
+            // 清空图表区域
+            probabilityChart.innerHTML = '';
+            
+            // 创建图表容器
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'w-full h-full';
+            probabilityChart.appendChild(chartContainer);
+            
+            // 创建穿透成功和失败的柱状图
+            const successBar = document.createElement('div');
+            successBar.className = 'w-full mb-2 bg-blue-50 rounded-lg overflow-hidden';
+            
+            const successFill = document.createElement('div');
+            successFill.className = 'h-10 bg-primary transition-all duration-1000 ease-out';
+            successFill.style.width = `${successRate}%`;
+            
+            const successLabel = document.createElement('div');
+            successLabel.className = 'flex items-center justify-between px-4 py-2 text-white font-bold';
+            successLabel.innerHTML = `
+                <span>穿透成功</span>
+                <span>${successRate}%</span>
+            `;
+            
+            successFill.appendChild(successLabel);
+            successBar.appendChild(successFill);
+            
+            const failBar = document.createElement('div');
+            failBar.className = 'w-full bg-red-50 rounded-lg overflow-hidden';
+            
+            const failFill = document.createElement('div');
+            failFill.className = 'h-10 bg-danger transition-all duration-1000 ease-out';
+            failFill.style.width = `${failRate}%`;
+            
+            const failLabel = document.createElement('div');
+            failLabel.className = 'flex items-center justify-between px-4 py-2 text-white font-bold';
+            failLabel.innerHTML = `
+                <span>穿透失败</span>
+                <span>${failRate}%</span>
+            `;
+            
+            failFill.appendChild(failLabel);
+            failBar.appendChild(failFill);
+            
+            chartContainer.appendChild(successBar);
+            chartContainer.appendChild(failBar);
+        }
+        
+        // 初始化页面
+        updateEvadeDiceControls();
+    </script>
+</body>
+</html>
+    
